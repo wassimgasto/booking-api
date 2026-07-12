@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-export class CreateAppointmentDto {}
-=======
 import {
   IsEmail,
   IsISO8601,
@@ -30,4 +27,3 @@ export class CreateAppointmentDto {
   @MaxLength(500)
   notes?: string;
 }
->>>>>>> 5a8ef405e0c2d6a45289b89fcb245c29abf8f1cb

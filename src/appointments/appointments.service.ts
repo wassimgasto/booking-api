@@ -4,24 +4,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Appointment } from '@prisma/client';
+import { PrismaService } from '../prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
-
-export interface Appointment {
-  id: number;
-  clientName: string;
-  clientEmail: string;
-  startTime: Date;
-  endTime: Date;
-  notes?: string;
-  status: 'confirmed' | 'cancelled';
-}
 
 @Injectable()
 export class AppointmentsService {
-  private appointments: Appointment[] = [];
-  private nextId = 1;
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateAppointmentDto): Appointment {
+  async create(dto: CreateAppointmentDto): Promise<Appointment> {
     const startTime = new Date(dto.startTime);
     const endTime = new Date(dto.endTime);
 
@@ -29,12 +20,13 @@ export class AppointmentsService {
       throw new BadRequestException('endTime must be after startTime');
     }
 
-    const overlapping = this.appointments.find(
-      (a) =>
-        a.status === 'confirmed' &&
-        startTime < a.endTime &&
-        endTime > a.startTime,
-    );
+    const overlapping = await this.prisma.appointment.findFirst({
+      where: {
+        status: 'confirmed',
+        startTime: { lt: endTime },
+        endTime: { gt: startTime },
+      },
+    });
 
     if (overlapping) {
       throw new ConflictException(
@@ -42,35 +34,38 @@ export class AppointmentsService {
       );
     }
 
-    const appointment: Appointment = {
-      id: this.nextId++,
-      clientName: dto.clientName,
-      clientEmail: dto.clientEmail,
-      startTime,
-      endTime,
-      notes: dto.notes,
-      status: 'confirmed',
-    };
-
-    this.appointments.push(appointment);
-    return appointment;
+    return this.prisma.appointment.create({
+      data: {
+        clientName: dto.clientName,
+        clientEmail: dto.clientEmail,
+        startTime,
+        endTime,
+        notes: dto.notes,
+      },
+    });
   }
 
-  findAll(): Appointment[] {
-    return this.appointments;
+  findAll(): Promise<Appointment[]> {
+    return this.prisma.appointment.findMany({
+      orderBy: { startTime: 'asc' },
+    });
   }
 
-  findOne(id: number): Appointment {
-    const appointment = this.appointments.find((a) => a.id === id);
+  async findOne(id: number): Promise<Appointment> {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+    });
     if (!appointment) {
       throw new NotFoundException(`Appointment #${id} not found`);
     }
     return appointment;
   }
 
-  cancel(id: number): Appointment {
-    const appointment = this.findOne(id);
-    appointment.status = 'cancelled';
-    return appointment;
+  async cancel(id: number): Promise<Appointment> {
+    await this.findOne(id);
+    return this.prisma.appointment.update({
+      where: { id },
+      data: { status: 'cancelled' },
+    });
   }
 }

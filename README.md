@@ -23,8 +23,8 @@ Businesses that take appointments (clinics, salons, consultants) constantly deal
 
 Interactive Swagger UI available at `/api`:
 
-<!-- Add your Swagger screenshot here: -->
-<!-- ![Swagger UI](docs/swagger.png) -->
+![Swagger UI](IMG_1510.png)
+
 
 ## 🛠️ Tech Stack
 

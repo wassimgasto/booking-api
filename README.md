@@ -1,9 +1,11 @@
 # Booking API
 
-> A production-style appointment booking REST API with conflict detection — built with NestJS and TypeScript.
+> A production-style appointment booking REST API with conflict detection — built with NestJS, TypeScript, PostgreSQL and Prisma.
 
 ![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white)
 ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black)
 
 ## 🎯 Problem
@@ -16,6 +18,7 @@ Businesses that take appointments (clinics, salons, consultants) constantly deal
 - **Overlap detection** — returns `409 Conflict` when a time slot is already taken
 - **Time integrity checks** — rejects appointments where `endTime <= startTime`
 - **List, view, and cancel** appointments
+- **PostgreSQL persistence** with Prisma ORM — data survives restarts
 - **Interactive API docs** with Swagger (`/api`)
 - **Global validation pipe** with whitelist + `forbidNonWhitelisted` (unknown fields are rejected)
 
@@ -28,7 +31,7 @@ Interactive Swagger UI available at `/api`:
 
 ## 🛠️ Tech Stack
 
-NestJS · TypeScript · class-validator / class-transformer · Swagger (OpenAPI 3)
+NestJS · TypeScript · PostgreSQL · Prisma · class-validator / class-transformer · Swagger (OpenAPI 3) · Docker
 
 ## 🚀 Quick Start
 
@@ -36,11 +39,23 @@ NestJS · TypeScript · class-validator / class-transformer · Swagger (OpenAPI 
 # install dependencies
 npm install
 
+# start PostgreSQL (Docker)
+bash setup-db.sh
+
+# apply database migrations
+npx prisma migrate dev
+
 # run in watch mode
 npm run start:dev
 ```
 
 The API starts on `http://localhost:3000` — Swagger docs at `http://localhost:3000/api`.
+
+Environment: create a `.env` file with:
+
+```
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/booking"
+```
 
 ## 📡 Endpoints
 
@@ -76,19 +91,19 @@ curl -X POST http://localhost:3000/appointments \
 
 ## 🏗️ Design Notes
 
-- **Overlap algorithm**: two time ranges `[startA, endA)` and `[startB, endB)` overlap if and only if `startA < endB && endA > startB`. This single condition catches every overlap case (partial, contained, identical).
+- **Overlap algorithm**: two time ranges `[startA, endA)` and `[startB, endB)` overlap if and only if `startA < endB && endA > startB`. This single condition catches every overlap case (partial, contained, identical). The check runs as a single Prisma `findFirst` query.
 - **DTO-first validation**: all input rules live in `CreateAppointmentDto`, enforced globally by a `ValidationPipe`, so controllers and services never receive malformed data.
-- **In-memory store**: current storage is an in-memory array to keep the focus on API design and business logic.
+- **Prisma schema as source of truth**: the `Appointment` model lives in `prisma/schema.prisma`, with versioned migrations under `prisma/migrations/`.
 
 ## 📊 What I'd improve for production
 
-- **PostgreSQL persistence** with TypeORM/Prisma + migrations (in-memory data is lost on restart)
-- **Concurrency safety** — a database unique/exclusion constraint on time ranges, since the in-memory check has a race condition under parallel requests
+- **Concurrency safety** — a database exclusion constraint on time ranges, since the application-level check has a race condition under parallel requests
 - **Authentication** (JWT) so clients can only manage their own appointments
 - **Pagination & filtering** on the list endpoint (by date range, by status)
 - **Tests** — unit tests for the overlap logic and e2e tests for the endpoints (Jest + Supertest)
-- **Docker Compose** setup for one-command local development
+- **Docker Compose** setup for one-command local development (API + DB together)
 
 ## 👤 Author
 
 **Abdelaziz Debbabi** — Fullstack Developer (Node.js/NestJS · PostgreSQL · React)
+

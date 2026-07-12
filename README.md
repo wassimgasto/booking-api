@@ -1,98 +1,94 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Booking API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> A production-style appointment booking REST API with conflict detection — built with NestJS and TypeScript.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black)
 
-## Description
+## 🎯 Problem
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Businesses that take appointments (clinics, salons, consultants) constantly deal with double bookings when scheduling is manual. This API solves that: it validates every booking request and **automatically rejects any appointment that overlaps** with an existing confirmed one.
 
-## Project setup
+## ✨ Features
 
-```bash
-$ npm install
-```
+- **Create appointments** with full input validation (`class-validator`)
+- **Overlap detection** — returns `409 Conflict` when a time slot is already taken
+- **Time integrity checks** — rejects appointments where `endTime <= startTime`
+- **List, view, and cancel** appointments
+- **Interactive API docs** with Swagger (`/api`)
+- **Global validation pipe** with whitelist + `forbidNonWhitelisted` (unknown fields are rejected)
 
-## Compile and run the project
+## 📸 API Documentation
 
-```bash
-# development
-$ npm run start
+Interactive Swagger UI available at `/api`:
 
-# watch mode
-$ npm run start:dev
+<!-- Add your Swagger screenshot here: -->
+<!-- ![Swagger UI](docs/swagger.png) -->
 
-# production mode
-$ npm run start:prod
-```
+## 🛠️ Tech Stack
 
-## Run tests
+NestJS · TypeScript · class-validator / class-transformer · Swagger (OpenAPI 3)
+
+## 🚀 Quick Start
 
 ```bash
-# unit tests
-$ npm run test
+# install dependencies
+npm install
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# run in watch mode
+npm run start:dev
 ```
 
-## Deployment
+The API starts on `http://localhost:3000` — Swagger docs at `http://localhost:3000/api`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 📡 Endpoints
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Method | Route                | Description                          |
+|--------|----------------------|--------------------------------------|
+| POST   | `/appointments`      | Book a new appointment               |
+| GET    | `/appointments`      | List all appointments                |
+| GET    | `/appointments/:id`  | Get one appointment                  |
+| DELETE | `/appointments/:id`  | Cancel an appointment                |
+
+### Example — booking an appointment
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+curl -X POST http://localhost:3000/appointments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clientName": "Ahmed",
+    "clientEmail": "ahmed@test.com",
+    "startTime": "2026-07-15T10:00:00Z",
+    "endTime": "2026-07-15T11:00:00Z"
+  }'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Example — conflict response (409)
 
-## Resources
+```json
+{
+  "message": "Time slot overlaps with appointment #1",
+  "error": "Conflict",
+  "statusCode": 409
+}
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🏗️ Design Notes
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **Overlap algorithm**: two time ranges `[startA, endA)` and `[startB, endB)` overlap if and only if `startA < endB && endA > startB`. This single condition catches every overlap case (partial, contained, identical).
+- **DTO-first validation**: all input rules live in `CreateAppointmentDto`, enforced globally by a `ValidationPipe`, so controllers and services never receive malformed data.
+- **In-memory store**: current storage is an in-memory array to keep the focus on API design and business logic.
 
-## Support
+## 📊 What I'd improve for production
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- **PostgreSQL persistence** with TypeORM/Prisma + migrations (in-memory data is lost on restart)
+- **Concurrency safety** — a database unique/exclusion constraint on time ranges, since the in-memory check has a race condition under parallel requests
+- **Authentication** (JWT) so clients can only manage their own appointments
+- **Pagination & filtering** on the list endpoint (by date range, by status)
+- **Tests** — unit tests for the overlap logic and e2e tests for the endpoints (Jest + Supertest)
+- **Docker Compose** setup for one-command local development
 
-## Stay in touch
+## 👤 Author
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Abdelaziz Debbabi** — Fullstack Developer (Node.js/NestJS · PostgreSQL · React)
